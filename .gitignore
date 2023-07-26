@@ -3,6 +3,8 @@
 #
 
 .vscode
+AutoZeroSample.h
+PI_GCS2_DLL.h
 
 #
 # C++
