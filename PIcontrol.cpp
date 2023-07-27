@@ -7,25 +7,27 @@
 
 class Actuator {
  public:
-  Actuator();
+  Actuator(char* szDescription);
   ~Actuator();
-  void init(char* szDescription);
+  void init();
   double read();
   void move(double value);
   void close();
 
  private:
   int iD;
+  char szDescription[1024];
 };
 
-Actuator::Actuator() { iD = 0; }
+Actuator::Actuator(char* szDescription) {
+  std::strcpy(this->szDescription, szDescription);
+}
 
 Actuator::~Actuator() { close(); }
 
-void Actuator::init(char* szDescription) {
-  std::cout << "Attempting to connect to controller: " << szDescription
-            << std::endl;
-  iD = PI_ConnectUSB(szDescription);
+void Actuator::init() {
+  std::cout << "Connecting to " << this->szDescription << std::endl;
+  iD = PI_ConnectUSB(this->szDescription);
 
   // identify controller
   char szIDN[200];
@@ -69,8 +71,8 @@ int main() {
   // connect to actuator
   // char szDescription[1024] = "PI E-727 Controller SN 0122042007";
   char szDescription[1024] = "PI E-727 Controller SN 0122040101";
-  Actuator tiptilt1;
-  tiptilt1.init(szDescription);
+  Actuator tiptilt1(szDescription);
+  tiptilt1.init();
 
   // read actuator value
   double value = tiptilt1.read();
