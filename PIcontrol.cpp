@@ -5,6 +5,39 @@
 
 #include "AutoZeroSample.h"
 
+bool AutoZeroIfNeeded(int ID, const std::string axis) {
+  BOOL bAutoZeroed;
+
+  if (!PI_qATZ(ID, axis.c_str(), &bAutoZeroed)) {
+    return false;
+  }
+
+  if (!bAutoZeroed) {
+    // if needed, autozero the axis
+    std::cout << "AutoZero axis " << axis << "..." << std::endl;
+
+    BOOL bUseDefaultVoltageArray[1];
+    bUseDefaultVoltageArray[0] = TRUE;
+
+    if (!PI_ATZ(ID, axis.c_str(), NULL, bUseDefaultVoltageArray)) {
+      return false;
+    }
+
+    // Wait until the autozero move is done.
+    BOOL bFlag = FALSE;
+
+    while (bFlag != TRUE) {
+      if (!PI_IsControllerReady(ID, &bFlag)) {
+        return false;
+      }
+    }
+  }
+
+  std::cout << "AutoZero finished successfully" << std::endl;
+
+  return true;
+}
+
 class Actuator {
  public:
   Actuator(char* szDescription);
@@ -13,6 +46,7 @@ class Actuator {
   double read();
   void move(double value);
   void close();
+  void autozero();
 
  private:
   int iD;
@@ -65,28 +99,49 @@ void Actuator::move(double value) {
   PI_MOV(iD, "2", &dValue);
 }
 
+// run autozero procedure
+void Actuator::autozero() {
+  if (!AutoZeroIfNeeded(this->iD, "2")) {
+    std::cout << "Autozero failed" << std::endl;
+  }
+}
+
 void Actuator::close() { PI_CloseConnection(iD); }
 
 int main() {
-  // connect to actuator
-  // char szDescription[1024] = "PI E-727 Controller SN 0122042007";
-  char szDescription[1024] = "PI E-727 Controller SN 0122040101";
-  Actuator tiptilt1(szDescription);
+  char szDescription1[1024] = "0122040101";
+  Actuator tiptilt1(szDescription1);
+  char szDescription2[1024] = "0122042007";
+  Actuator tiptilt2(szDescription2);
+
   tiptilt1.init();
+  tiptilt2.init();
 
-  // read actuator value
+  // autozero actuators (use if actuator is not moving)
+  // tiptilt1.autozero();
+  // tiptilt2.autozero();
+
+  // read actuator values
   double value = tiptilt1.read();
-  std::cout << "Actuator value: " << value << std::endl;
+  double value2 = tiptilt2.read();
+  std::cout << "Actuator1 value: " << value << std::endl;
+  std::cout << "Actuator2 value: " << value2 << std::endl;
 
-  // move actuator
-  tiptilt1.move(10.);
-
-  // wait 10 ms
+  // wait 100 ms
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-  // read actuator value
+  // move actuators
+  tiptilt1.move(0.);
+  tiptilt2.move(0.);
+
+  // wait 100 ms
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  // read actuator values
   value = tiptilt1.read();
-  std::cout << "Actuator value: " << value << std::endl;
+  std::cout << "Actuator1 value: " << value << std::endl;
+  value2 = tiptilt2.read();
+  std::cout << "Actuator2 value: " << value2 << std::endl;
 
   // close connection
   tiptilt1.close();
