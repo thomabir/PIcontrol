@@ -19,6 +19,7 @@ A simple C++ program to control a PI E-727 piezo controller. It sets up the conn
   cp pi-drivers/Development/C++/Samples/E-727/AutoZeroSample/AutoZeroSample.h PIcontrol/
   cp pi-drivers/Linux/PI_Application_Software/libpi_pi_gcs2_x86_64/include/PI_GCS2_DLL.h PIcontrol/
   ```
+- Restart the computer. I could not get it to connect to the controller without restarting the PC.
 
 ## Build
 ```sh
